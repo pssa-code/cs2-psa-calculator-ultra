@@ -272,44 +272,6 @@ m_rawinput "1"
 zoom_sensitivity_ratio_mouse "1.0"
 ```
 
----
-
-## 🚀 Despliegue en GitHub Pages
-
-### Opción 1: Automática
-
-**Windows**:
-```cmd
-# Edita deploy.bat (líneas 11-12)
-deploy.bat
-```
-
-**Mac/Linux**:
-```bash
-# Edita deploy.sh (líneas 13-14)
-bash deploy.sh
-```
-
-### Opción 2: Manual
-
-```bash
-git init
-git add .
-git commit -m "Initial commit: CS2 PSA Calculator ULTRA"
-git remote add origin https://github.com/TU-USUARIO/cs2-psa-calculator.git
-git branch -M main
-git push -u origin main
-
-# Activa GitHub Pages:
-# Settings → Pages → Source: main → Save
-```
-
-**Tu sitio estará en:**
-```
-https://TU-USUARIO.github.io/cs2-psa-calculator/
-```
-
----
 
 ## 💡 Tips para Mejores Resultados
 
@@ -348,19 +310,6 @@ https://TU-USUARIO.github.io/cs2-psa-calculator/
 
 ---
 
-## 📚 Documentación Adicional
-
-### Guías de Uso:
-- 📖 [QUICKSTART.md](QUICKSTART.md) - Inicio rápido en 3 pasos
-- 🚀 [DEPLOYMENT.md](DEPLOYMENT.md) - Guías de deploy (Netlify, Vercel, Cloudflare)
-- ⚙️ [ADVANCED.md](ADVANCED.md) - Configuración avanzada, autoexec.cfg, troubleshooting
-
-### Documentación de Funcionalidades:
-- 🔫 [BIBLIOTECA_MIRAS_PRO.md](BIBLIOTECA_MIRAS_PRO.md) - 50 profesionales del TOP 10 HLTV
-- 📖 [GUIAS_MEJORA_CS2.md](GUIAS_MEJORA_CS2.md) - 6 categorías de skill con 80+ tips
-- ⚙️ [OPTIMIZACION_CS2.md](OPTIMIZACION_CS2.md) - 240+ configuraciones técnicas
-- 📄 [OPTIMIZACION_CS2.pdf](OPTIMIZACION_CS2.pdf) - Documentación en PDF
-- 📝 [OPTIMIZACION_CS2.docx](OPTIMIZACION_CS2.docx) - Documentación en Word
 
 ---
 
@@ -398,29 +347,6 @@ https://TU-USUARIO.github.io/cs2-psa-calculator/
 - Indica que estás en el rango correcto
 
 ---
-
-## 🤝 Contribuir
-
-¡Contribuciones bienvenidas!
-
-```bash
-# Fork → Clone → Crear rama
-git checkout -b feature/MiMejora
-
-# Desarrolla y testea
-# Commit
-git commit -m "Add: Mi mejora increíble"
-
-# Push y Pull Request
-git push origin feature/MiMejora
-```
-
-**Ideas para contribuir**:
-- Más pros en la database
-- Soporte para más juegos
-- Traducciones
-- Mejoras en el algoritmo
-- UI/UX improvements
 
 ---
 
