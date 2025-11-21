@@ -593,6 +593,11 @@ class PSACalculatorUltra {
         this.saveResult();
         
         this.showToast('¡Cálculo completado! Esta es tu sensibilidad perfecta', 'success');
+        
+        // Show feedback panel
+        if (window.feedbackManager) {
+            window.feedbackManager.showFeedbackPanel();
+        }
     }
     
     generateProComparison() {
@@ -851,6 +856,12 @@ class PSACalculatorUltra {
         this.setupPanel.style.display = 'block';
         this.iterationPanel.style.display = 'none';
         this.resultPanel.style.display = 'none';
+        
+        // Hide feedback panel
+        const feedbackPanel = document.getElementById('feedbackPanel');
+        if (feedbackPanel) {
+            feedbackPanel.style.display = 'none';
+        }
     }
 }
 
@@ -885,11 +896,14 @@ document.addEventListener('DOMContentLoaded', () => {
 class ProCrosshairLibrary {
     constructor() {
         this.players = this.initPlayersDatabase();
-        this.currentFilter = 'all';
-        this.searchQuery = '';
+        
+        // Load saved filters from localStorage
+        this.currentFilter = window.persistenceManager?.getTeamFilter() || 'all';
+        this.searchQuery = window.persistenceManager?.getSearchFilter() || '';
         
         this.initializeElements();
         this.attachEventListeners();
+        this.restoreFilters();
         this.render();
     }
     
@@ -978,6 +992,7 @@ class ProCrosshairLibrary {
         // Search
         this.searchInput?.addEventListener('input', (e) => {
             this.searchQuery = e.target.value.toLowerCase();
+            window.persistenceManager?.saveSearchFilter(this.searchQuery);
             this.render();
         });
         
@@ -994,9 +1009,27 @@ class ProCrosshairLibrary {
                 
                 // Update filter
                 this.currentFilter = e.target.dataset.team;
+                window.persistenceManager?.saveTeamFilter(this.currentFilter);
                 this.render();
             }
         });
+    }
+    
+    restoreFilters() {
+        // Restore search input value
+        if (this.searchInput && this.searchQuery) {
+            this.searchInput.value = this.searchQuery;
+        }
+        
+        // Restore team filter button
+        if (this.teamFilters && this.currentFilter) {
+            this.teamFilters.querySelectorAll('.team-filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.team === this.currentFilter) {
+                    btn.classList.add('active');
+                }
+            });
+        }
     }
     
     filterPlayers() {
@@ -1877,9 +1910,13 @@ class OptimizationConfigs {
         const grid = document.getElementById('optimizationGrid');
         if (!grid) return;
         
-        grid.innerHTML = this.configs.map(config => {
+        grid.innerHTML = this.configs.map((config, index) => {
+            // Check if this card should be expanded
+            const savedIndex = window.persistenceManager?.getExpandedCard('optimization');
+            const shouldExpand = savedIndex === index;
+            
             return `
-                <div class="optimization-card" data-color="${config.color}">
+                <div class="optimization-card ${shouldExpand ? 'expanded' : ''}" data-color="${config.color}" data-index="${index}">
                     <div class="optimization-card-header" style="border-left: 4px solid ${config.color}">
                         <div class="optimization-card-icon">${config.icon}</div>
                         <h3 class="optimization-card-title">${config.name}</h3>
@@ -1912,7 +1949,7 @@ class OptimizationConfigs {
     attachEventListeners() {
         const cards = document.querySelectorAll('.optimization-card');
         
-        cards.forEach(card => {
+        cards.forEach((card, cardIndex) => {
             const header = card.querySelector('.optimization-card-header');
             
             header.addEventListener('click', () => {
@@ -1927,6 +1964,14 @@ class OptimizationConfigs {
                 
                 // Toggle current card
                 card.classList.toggle('expanded');
+                
+                // Save expanded state
+                const index = parseInt(card.dataset.index);
+                if (!isExpanded) {
+                    window.persistenceManager?.saveExpandedCard('optimization', index);
+                } else {
+                    window.persistenceManager?.saveExpandedCard('optimization', null);
+                }
                 
                 // Scroll into view if expanding
                 if (!isExpanded) {
@@ -1963,7 +2008,89 @@ class OptimizationConfigs {
     }
 }
 
-// Category Navigation
+// ===========================
+// PERSISTENCE MANAGER
+// ===========================
+class PersistenceManager {
+    constructor() {
+        this.storageKey = 'cs2ToolsState';
+    }
+    
+    // Save current tab
+    saveCurrentTab(tabId) {
+        const state = this.getState();
+        state.currentTab = tabId;
+        this.setState(state);
+    }
+    
+    // Get saved tab
+    getSavedTab() {
+        const state = this.getState();
+        return state.currentTab || 'library';
+    }
+    
+    // Save expanded cards
+    saveExpandedCard(category, cardIndex) {
+        const state = this.getState();
+        if (!state.expandedCards) state.expandedCards = {};
+        state.expandedCards[category] = cardIndex;
+        this.setState(state);
+    }
+    
+    // Get expanded card
+    getExpandedCard(category) {
+        const state = this.getState();
+        return state.expandedCards?.[category] || null;
+    }
+    
+    // Save search filter
+    saveSearchFilter(filter) {
+        const state = this.getState();
+        state.searchFilter = filter;
+        this.setState(state);
+    }
+    
+    // Get search filter
+    getSearchFilter() {
+        const state = this.getState();
+        return state.searchFilter || '';
+    }
+    
+    // Save team filter
+    saveTeamFilter(team) {
+        const state = this.getState();
+        state.teamFilter = team;
+        this.setState(state);
+    }
+    
+    // Get team filter
+    getTeamFilter() {
+        const state = this.getState();
+        return state.teamFilter || 'all';
+    }
+    
+    // Generic state management
+    getState() {
+        try {
+            return JSON.parse(localStorage.getItem(this.storageKey) || '{}');
+        } catch (e) {
+            return {};
+        }
+    }
+    
+    setState(state) {
+        try {
+            localStorage.setItem(this.storageKey, JSON.stringify(state));
+        } catch (e) {
+            console.error('Error saving state:', e);
+        }
+    }
+}
+
+// Initialize global persistence manager
+window.persistenceManager = new PersistenceManager();
+
+// Category Navigation with Persistence
 function initCategoryNavigation() {
     const tabLibrary = document.getElementById('tabLibrary');
     const tabGuides = document.getElementById('tabGuides');
@@ -1974,47 +2101,344 @@ function initCategoryNavigation() {
     const optimizationSection = document.getElementById('optimizationSection');
     const calculatorSection = document.getElementById('calculatorSection');
     
+    // Helper function to switch tabs
+    function switchTab(activeTab, activeSection) {
+        // Remove all active states
+        [tabLibrary, tabGuides, tabOptimization, tabCalculator].forEach(tab => tab?.classList.remove('active'));
+        [librarySection, guidesSection, optimizationSection, calculatorSection].forEach(section => section?.classList.remove('active'));
+        
+        // Add active state to selected
+        activeTab?.classList.add('active');
+        activeSection?.classList.add('active');
+        
+        // Save to localStorage
+        const tabId = activeTab?.id.replace('tab', '').toLowerCase();
+        window.persistenceManager.saveCurrentTab(tabId);
+    }
+    
     tabLibrary?.addEventListener('click', () => {
-        tabLibrary.classList.add('active');
-        tabGuides.classList.remove('active');
-        tabOptimization.classList.remove('active');
-        tabCalculator.classList.remove('active');
-        librarySection.classList.add('active');
-        guidesSection.classList.remove('active');
-        optimizationSection.classList.remove('active');
-        calculatorSection.classList.remove('active');
+        switchTab(tabLibrary, librarySection);
     });
     
     tabGuides?.addEventListener('click', () => {
-        tabGuides.classList.add('active');
-        tabLibrary.classList.remove('active');
-        tabOptimization.classList.remove('active');
-        tabCalculator.classList.remove('active');
-        guidesSection.classList.add('active');
-        librarySection.classList.remove('active');
-        optimizationSection.classList.remove('active');
-        calculatorSection.classList.remove('active');
+        switchTab(tabGuides, guidesSection);
     });
     
     tabOptimization?.addEventListener('click', () => {
-        tabOptimization.classList.add('active');
-        tabLibrary.classList.remove('active');
-        tabGuides.classList.remove('active');
-        tabCalculator.classList.remove('active');
-        optimizationSection.classList.add('active');
-        librarySection.classList.remove('active');
-        guidesSection.classList.remove('active');
-        calculatorSection.classList.remove('active');
+        switchTab(tabOptimization, optimizationSection);
     });
     
     tabCalculator?.addEventListener('click', () => {
-        tabCalculator.classList.add('active');
-        tabLibrary.classList.remove('active');
-        tabGuides.classList.remove('active');
-        tabOptimization.classList.remove('active');
-        calculatorSection.classList.add('active');
-        librarySection.classList.remove('active');
-        guidesSection.classList.remove('active');
-        optimizationSection.classList.remove('active');
+        switchTab(tabCalculator, calculatorSection);
     });
+    
+    // Restore last visited tab
+    const savedTab = window.persistenceManager.getSavedTab();
+    const tabMap = {
+        'library': [tabLibrary, librarySection],
+        'guides': [tabGuides, guidesSection],
+        'optimization': [tabOptimization, optimizationSection],
+        'calculator': [tabCalculator, calculatorSection]
+    };
+    
+    if (savedTab && tabMap[savedTab]) {
+        switchTab(tabMap[savedTab][0], tabMap[savedTab][1]);
+    }
 }
+
+
+// ===========================
+// FEEDBACK MANAGER
+// ===========================
+class FeedbackManager {
+    constructor() {
+        this.storageKey = 'cs2CalculatorFeedback';
+        this.currentSessionFeedback = null;
+        this.initializeElements();
+        this.attachEventListeners();
+        this.updateStats();
+    }
+    
+    initializeElements() {
+        this.feedbackPanel = document.getElementById('feedbackPanel');
+        this.feedbackButtons = document.getElementById('feedbackButtons');
+        this.feedbackYesBtn = document.getElementById('feedbackYesBtn');
+        this.feedbackNoBtn = document.getElementById('feedbackNoBtn');
+        this.feedbackCommentSection = document.getElementById('feedbackCommentSection');
+        this.feedbackComment = document.getElementById('feedbackComment');
+        this.submitFeedbackBtn = document.getElementById('submitFeedbackBtn');
+        this.skipFeedbackBtn = document.getElementById('skipFeedbackBtn');
+        this.feedbackThanks = document.getElementById('feedbackThanks');
+        this.feedbackStats = document.getElementById('feedbackStats');
+        this.feedbackYesCount = document.getElementById('feedbackYesCount');
+        this.feedbackNoCount = document.getElementById('feedbackNoCount');
+        this.feedbackCommentCount = document.getElementById('feedbackCommentCount');
+    }
+    
+    attachEventListeners() {
+        this.feedbackYesBtn?.addEventListener('click', () => this.selectFeedback('yes'));
+        this.feedbackNoBtn?.addEventListener('click', () => this.selectFeedback('no'));
+        this.submitFeedbackBtn?.addEventListener('click', () => this.submitFeedback());
+        this.skipFeedbackBtn?.addEventListener('click', () => this.submitFeedback());
+    }
+    
+    // Show feedback panel after calculation complete
+    showFeedbackPanel() {
+        if (this.feedbackPanel) {
+            this.feedbackPanel.style.display = 'block';
+            this.resetFeedbackPanel();
+            
+            // Smooth scroll to feedback panel
+            setTimeout(() => {
+                this.feedbackPanel.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'nearest' 
+                });
+            }, 300);
+        }
+    }
+    
+    // Reset feedback panel to initial state
+    resetFeedbackPanel() {
+        this.currentSessionFeedback = null;
+        this.feedbackYesBtn?.classList.remove('selected');
+        this.feedbackNoBtn?.classList.remove('selected');
+        this.feedbackButtons.style.display = 'grid';
+        this.feedbackCommentSection.style.display = 'none';
+        this.feedbackThanks.style.display = 'none';
+        this.feedbackComment.value = '';
+    }
+    
+    // Handle feedback selection
+    selectFeedback(type) {
+        this.currentSessionFeedback = {
+            type: type,
+            timestamp: new Date().toISOString(),
+            sensitivity: document.getElementById('finalSensitivity')?.textContent || 'N/A',
+            edpi: document.getElementById('edpiValue')?.textContent || 'N/A'
+        };
+        
+        // Visual feedback
+        if (type === 'yes') {
+            this.feedbackYesBtn.classList.add('selected');
+            this.feedbackNoBtn?.classList.remove('selected');
+        } else {
+            this.feedbackNoBtn.classList.add('selected');
+            this.feedbackYesBtn?.classList.remove('selected');
+        }
+        
+        // Show comment section
+        setTimeout(() => {
+            this.feedbackButtons.style.display = 'none';
+            this.feedbackCommentSection.style.display = 'block';
+            this.feedbackComment.focus();
+        }, 300);
+    }
+    
+    // Submit feedback
+    submitFeedback() {
+        if (!this.currentSessionFeedback) return;
+        
+        // Add comment if provided
+        const comment = this.feedbackComment.value.trim();
+        if (comment) {
+            this.currentSessionFeedback.comment = comment;
+        }
+        
+        // Save to localStorage
+        this.saveFeedback(this.currentSessionFeedback);
+        
+        // Show thank you message
+        this.feedbackCommentSection.style.display = 'none';
+        this.feedbackThanks.style.display = 'block';
+        
+        // Update stats
+        this.updateStats();
+        
+        // Show toast notification
+        showToast(`¡Gracias por tu feedback! ${this.currentSessionFeedback.type === 'yes' ? '👍' : '👎'}`);
+    }
+    
+    // Save feedback to localStorage
+    saveFeedback(feedback) {
+        try {
+            const feedbacks = this.getAllFeedbacks();
+            feedbacks.push(feedback);
+            localStorage.setItem(this.storageKey, JSON.stringify(feedbacks));
+        } catch (e) {
+            console.error('Error saving feedback:', e);
+        }
+    }
+    
+    // Get all feedbacks from localStorage
+    getAllFeedbacks() {
+        try {
+            const data = localStorage.getItem(this.storageKey);
+            return data ? JSON.parse(data) : [];
+        } catch (e) {
+            console.error('Error loading feedbacks:', e);
+            return [];
+        }
+    }
+    
+    // Update statistics display
+    updateStats() {
+        const feedbacks = this.getAllFeedbacks();
+        
+        const yesCount = feedbacks.filter(f => f.type === 'yes').length;
+        const noCount = feedbacks.filter(f => f.type === 'no').length;
+        const commentCount = feedbacks.filter(f => f.comment && f.comment.length > 0).length;
+        
+        if (this.feedbackYesCount) this.feedbackYesCount.textContent = yesCount;
+        if (this.feedbackNoCount) this.feedbackNoCount.textContent = noCount;
+        if (this.feedbackCommentCount) this.feedbackCommentCount.textContent = commentCount;
+    }
+    
+    // Get feedback statistics
+    getStats() {
+        const feedbacks = this.getAllFeedbacks();
+        return {
+            total: feedbacks.length,
+            yes: feedbacks.filter(f => f.type === 'yes').length,
+            no: feedbacks.filter(f => f.type === 'no').length,
+            withComments: feedbacks.filter(f => f.comment).length,
+            satisfactionRate: feedbacks.length > 0 
+                ? ((feedbacks.filter(f => f.type === 'yes').length / feedbacks.length) * 100).toFixed(1) 
+                : 0
+        };
+    }
+}
+
+// Initialize global feedback manager
+window.feedbackManager = new FeedbackManager();
+
+
+// ===========================
+// PAGE VIEWS TRACKER (GLOBAL)
+// ===========================
+class PageViewsTracker {
+    constructor() {
+        this.countElement = document.getElementById('pageViewsCount');
+        this.namespace = 'cs2-psa-calculator';
+        this.key = 'page-views';
+        this.apiUrl = `https://api.countapi.xyz`;
+        this.localStorageKey = 'cs2PageViewsBackup';
+        this.initializeViews();
+    }
+    
+    // Initialize and increment page views (global)
+    async initializeViews() {
+        try {
+            // Try to use global counter API
+            const response = await fetch(`${this.apiUrl}/hit/${this.namespace}/${this.key}`);
+            
+            if (response.ok) {
+                const data = await response.json();
+                const globalViews = data.value;
+                
+                // Save backup locally
+                this.saveLocalBackup(globalViews);
+                this.updateDisplay(globalViews);
+                console.log(`🌐 Visitas globales: #${globalViews}`);
+            } else {
+                throw new Error('API no disponible');
+            }
+        } catch (error) {
+            console.warn('⚠️ Usando contador local como respaldo:', error.message);
+            // Fallback to local storage
+            this.useLocalFallback();
+        }
+    }
+    
+    // Fallback to local storage if API fails
+    useLocalFallback() {
+        const localViews = this.getLocalBackup();
+        const newViews = localViews + 1;
+        this.saveLocalBackup(newViews);
+        this.updateDisplay(newViews);
+        console.log(`📊 Visitas locales: #${newViews}`);
+    }
+    
+    // Get local backup
+    getLocalBackup() {
+        try {
+            const views = localStorage.getItem(this.localStorageKey);
+            return views ? parseInt(views, 10) : 0;
+        } catch (e) {
+            return 0;
+        }
+    }
+    
+    // Save local backup
+    saveLocalBackup(count) {
+        try {
+            localStorage.setItem(this.localStorageKey, count.toString());
+        } catch (e) {
+            console.error('Error saving backup:', e);
+        }
+    }
+    
+    // Get current global count
+    async getGlobalViews() {
+        try {
+            const response = await fetch(`${this.apiUrl}/get/${this.namespace}/${this.key}`);
+            if (response.ok) {
+                const data = await response.json();
+                return data.value;
+            }
+        } catch (e) {
+            console.error('Error getting global views:', e);
+        }
+        return this.getLocalBackup();
+    }
+    
+    // Update the display with animation
+    updateDisplay(count) {
+        if (!this.countElement) return;
+        
+        const currentDisplay = parseInt(this.countElement.textContent.replace(/,/g, '')) || 0;
+        const difference = count - currentDisplay;
+        
+        if (difference <= 0) {
+            this.countElement.textContent = this.formatNumber(count);
+            return;
+        }
+        
+        // Animate count up
+        let current = currentDisplay;
+        const increment = Math.ceil(difference / 20);
+        const duration = 500;
+        const steps = Math.min(20, difference);
+        const stepDuration = duration / steps;
+        
+        const animate = () => {
+            current += increment;
+            if (current >= count) {
+                this.countElement.textContent = this.formatNumber(count);
+                return;
+            }
+            this.countElement.textContent = this.formatNumber(current);
+            setTimeout(animate, stepDuration);
+        };
+        
+        animate();
+    }
+    
+    // Format number with thousands separator
+    formatNumber(num) {
+        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+    
+    // Get statistics
+    async getStats() {
+        const globalViews = await this.getGlobalViews();
+        return {
+            totalViews: globalViews,
+            formattedViews: this.formatNumber(globalViews),
+            isGlobal: true
+        };
+    }
+}
+
+// Initialize page views tracker
+window.pageViewsTracker = new PageViewsTracker();
