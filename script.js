@@ -11,6 +11,15 @@
 // - Smart recommendations
 // ===========================
 
+// ===========================
+// SUPABASE CONFIGURATION
+// ===========================
+const SUPABASE_URL = 'https://ozszeemsujopmfxqxnir.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im96c3plZW1zdWpvcG1meHF4bmlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM2OTM1NDcsImV4cCI6MjA3OTI2OTU0N30.JCy8AgIf8rCBVYK3yC8kv0jM4sQ-Q2ruDr2WnnCspd8';
+
+// Initialize Supabase client
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 class PSACalculatorUltra {
     constructor() {
         // Core settings
@@ -2148,15 +2157,14 @@ function initCategoryNavigation() {
 
 
 // ===========================
-// FEEDBACK MANAGER
+// FEEDBACK MANAGER (SUPABASE)
 // ===========================
 class FeedbackManager {
     constructor() {
-        this.storageKey = 'cs2CalculatorFeedback';
         this.currentSessionFeedback = null;
         this.initializeElements();
         this.attachEventListeners();
-        this.updateStats();
+        this.loadAndUpdateStats();
     }
     
     initializeElements() {
@@ -2235,8 +2243,8 @@ class FeedbackManager {
         }, 300);
     }
     
-    // Submit feedback
-    submitFeedback() {
+    // Submit feedback to Supabase
+    async submitFeedback() {
         if (!this.currentSessionFeedback) return;
         
         // Add comment if provided
@@ -2245,67 +2253,107 @@ class FeedbackManager {
             this.currentSessionFeedback.comment = comment;
         }
         
-        // Save to localStorage
-        this.saveFeedback(this.currentSessionFeedback);
+        // Save to Supabase
+        await this.saveFeedback(this.currentSessionFeedback);
         
         // Show thank you message
         this.feedbackCommentSection.style.display = 'none';
         this.feedbackThanks.style.display = 'block';
         
         // Update stats
-        this.updateStats();
+        await this.loadAndUpdateStats();
         
         // Show toast notification
         showToast(`¡Gracias por tu feedback! ${this.currentSessionFeedback.type === 'yes' ? '👍' : '👎'}`);
     }
     
-    // Save feedback to localStorage
-    saveFeedback(feedback) {
+    // Save feedback to Supabase
+    async saveFeedback(feedback) {
         try {
-            const feedbacks = this.getAllFeedbacks();
+            const { data, error } = await supabase
+                .from('feedback')
+                .insert([{
+                    feedback_type: feedback.type,
+                    comment: feedback.comment || null,
+                    sensitivity: feedback.sensitivity,
+                    edpi: feedback.edpi,
+                    user_agent: navigator.userAgent,
+                    created_at: feedback.timestamp
+                }]);
+            
+            if (error) {
+                console.error('Error saving feedback to Supabase:', error);
+                // Fallback to localStorage if Supabase fails
+                this.saveFeedbackLocal(feedback);
+            } else {
+                console.log('✅ Feedback guardado en Supabase:', feedback.type);
+            }
+        } catch (e) {
+            console.error('Error connecting to Supabase:', e);
+            this.saveFeedbackLocal(feedback);
+        }
+    }
+    
+    // Fallback: save to localStorage
+    saveFeedbackLocal(feedback) {
+        try {
+            const storageKey = 'cs2CalculatorFeedbackLocal';
+            const feedbacks = JSON.parse(localStorage.getItem(storageKey) || '[]');
             feedbacks.push(feedback);
-            localStorage.setItem(this.storageKey, JSON.stringify(feedbacks));
+            localStorage.setItem(storageKey, JSON.stringify(feedbacks));
+            console.log('💾 Feedback guardado localmente (fallback)');
         } catch (e) {
-            console.error('Error saving feedback:', e);
+            console.error('Error saving feedback locally:', e);
         }
     }
     
-    // Get all feedbacks from localStorage
-    getAllFeedbacks() {
+    // Load stats from Supabase and update display
+    async loadAndUpdateStats() {
         try {
-            const data = localStorage.getItem(this.storageKey);
-            return data ? JSON.parse(data) : [];
+            const stats = await this.getStatsFromSupabase();
+            
+            if (this.feedbackYesCount) this.feedbackYesCount.textContent = stats.yes;
+            if (this.feedbackNoCount) this.feedbackNoCount.textContent = stats.no;
+            if (this.feedbackCommentCount) this.feedbackCommentCount.textContent = stats.withComments;
+            
+            console.log('📊 Stats de feedback:', stats);
         } catch (e) {
-            console.error('Error loading feedbacks:', e);
-            return [];
+            console.error('Error loading stats:', e);
         }
     }
     
-    // Update statistics display
-    updateStats() {
-        const feedbacks = this.getAllFeedbacks();
-        
-        const yesCount = feedbacks.filter(f => f.type === 'yes').length;
-        const noCount = feedbacks.filter(f => f.type === 'no').length;
-        const commentCount = feedbacks.filter(f => f.comment && f.comment.length > 0).length;
-        
-        if (this.feedbackYesCount) this.feedbackYesCount.textContent = yesCount;
-        if (this.feedbackNoCount) this.feedbackNoCount.textContent = noCount;
-        if (this.feedbackCommentCount) this.feedbackCommentCount.textContent = commentCount;
+    // Get statistics from Supabase
+    async getStatsFromSupabase() {
+        try {
+            // Get all feedback
+            const { data, error } = await supabase
+                .from('feedback')
+                .select('feedback_type, comment');
+            
+            if (error) throw error;
+            
+            const yesCount = data.filter(f => f.feedback_type === 'yes').length;
+            const noCount = data.filter(f => f.feedback_type === 'no').length;
+            const commentCount = data.filter(f => f.comment && f.comment.length > 0).length;
+            
+            return {
+                total: data.length,
+                yes: yesCount,
+                no: noCount,
+                withComments: commentCount,
+                satisfactionRate: data.length > 0 
+                    ? ((yesCount / data.length) * 100).toFixed(1) 
+                    : 0
+            };
+        } catch (error) {
+            console.error('Error fetching stats from Supabase:', error);
+            return { total: 0, yes: 0, no: 0, withComments: 0, satisfactionRate: 0 };
+        }
     }
     
-    // Get feedback statistics
-    getStats() {
-        const feedbacks = this.getAllFeedbacks();
-        return {
-            total: feedbacks.length,
-            yes: feedbacks.filter(f => f.type === 'yes').length,
-            no: feedbacks.filter(f => f.type === 'no').length,
-            withComments: feedbacks.filter(f => f.comment).length,
-            satisfactionRate: feedbacks.length > 0 
-                ? ((feedbacks.filter(f => f.type === 'yes').length / feedbacks.length) * 100).toFixed(1) 
-                : 0
-        };
+    // Get feedback statistics (public API)
+    async getStats() {
+        return await this.getStatsFromSupabase();
     }
 }
 
@@ -2314,49 +2362,44 @@ window.feedbackManager = new FeedbackManager();
 
 
 // ===========================
-// PAGE VIEWS TRACKER (GLOBAL)
+// PAGE VIEWS TRACKER (SUPABASE)
 // ===========================
 class PageViewsTracker {
     constructor() {
         this.countElement = document.getElementById('pageViewsCount');
-        this.namespace = 'cs2-psa-calculator';
-        this.key = 'page-views';
-        this.apiUrl = `https://api.countapi.xyz`;
         this.localStorageKey = 'cs2PageViewsBackup';
         this.initializeViews();
     }
     
-    // Initialize and increment page views (global)
+    // Initialize and increment page views (global with Supabase)
     async initializeViews() {
         try {
-            // Try to use global counter API
-            const response = await fetch(`${this.apiUrl}/hit/${this.namespace}/${this.key}`);
+            // Call the PostgreSQL function to increment views
+            const { data, error } = await supabase
+                .rpc('increment_page_views');
             
-            if (response.ok) {
-                const data = await response.json();
-                const globalViews = data.value;
-                
-                // Save backup locally
-                this.saveLocalBackup(globalViews);
-                this.updateDisplay(globalViews);
-                console.log(`🌐 Visitas globales: #${globalViews}`);
-            } else {
-                throw new Error('API no disponible');
-            }
+            if (error) throw error;
+            
+            const globalViews = data;
+            
+            // Save backup locally
+            this.saveLocalBackup(globalViews);
+            this.updateDisplay(globalViews);
+            console.log(`🌐 Visitas globales (Supabase): #${globalViews}`);
         } catch (error) {
-            console.warn('⚠️ Usando contador local como respaldo:', error.message);
+            console.warn('⚠️ Error con Supabase, usando contador local:', error.message);
             // Fallback to local storage
             this.useLocalFallback();
         }
     }
     
-    // Fallback to local storage if API fails
+    // Fallback to local storage if Supabase fails
     useLocalFallback() {
         const localViews = this.getLocalBackup();
         const newViews = localViews + 1;
         this.saveLocalBackup(newViews);
         this.updateDisplay(newViews);
-        console.log(`📊 Visitas locales: #${newViews}`);
+        console.log(`📊 Visitas locales (fallback): #${newViews}`);
     }
     
     // Get local backup
@@ -2378,18 +2421,22 @@ class PageViewsTracker {
         }
     }
     
-    // Get current global count
+    // Get current global count from Supabase
     async getGlobalViews() {
         try {
-            const response = await fetch(`${this.apiUrl}/get/${this.namespace}/${this.key}`);
-            if (response.ok) {
-                const data = await response.json();
-                return data.value;
-            }
+            const { data, error } = await supabase
+                .from('page_views')
+                .select('view_count')
+                .eq('id', 1)
+                .single();
+            
+            if (error) throw error;
+            
+            return data.view_count;
         } catch (e) {
             console.error('Error getting global views:', e);
+            return this.getLocalBackup();
         }
-        return this.getLocalBackup();
     }
     
     // Update the display with animation
@@ -2429,13 +2476,14 @@ class PageViewsTracker {
         return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     }
     
-    // Get statistics
+    // Get statistics (public API)
     async getStats() {
         const globalViews = await this.getGlobalViews();
         return {
             totalViews: globalViews,
             formattedViews: this.formatNumber(globalViews),
-            isGlobal: true
+            isGlobal: true,
+            source: 'Supabase'
         };
     }
 }
