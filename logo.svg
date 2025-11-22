@@ -1,0 +1,76 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background Circle -->
+  <circle cx="256" cy="256" r="240" fill="url(#bgGradient)"/>
+  
+  <!-- Outer Ring -->
+  <circle cx="256" cy="256" r="220" stroke="url(#ringGradient)" stroke-width="8" fill="none" opacity="0.3"/>
+  
+  <!-- Crosshair Design -->
+  <g id="crosshair">
+    <!-- Center Circle -->
+    <circle cx="256" cy="256" r="60" fill="none" stroke="#00ff88" stroke-width="6"/>
+    <circle cx="256" cy="256" r="50" fill="none" stroke="#00ff88" stroke-width="2" opacity="0.5"/>
+    
+    <!-- Horizontal Line -->
+    <line x1="140" y1="256" x2="220" y2="256" stroke="#00ff88" stroke-width="6" stroke-linecap="round"/>
+    <line x1="292" y1="256" x2="372" y2="256" stroke="#00ff88" stroke-width="6" stroke-linecap="round"/>
+    
+    <!-- Vertical Line -->
+    <line x1="256" y1="140" x2="256" y2="220" stroke="#00ff88" stroke-width="6" stroke-linecap="round"/>
+    <line x1="256" y1="292" x2="256" y2="372" stroke="#00ff88" stroke-width="6" stroke-linecap="round"/>
+    
+    <!-- Corner Brackets -->
+    <path d="M 180 180 L 180 200 M 180 180 L 200 180" stroke="#00ff88" stroke-width="4" stroke-linecap="round"/>
+    <path d="M 332 180 L 332 200 M 332 180 L 312 180" stroke="#00ff88" stroke-width="4" stroke-linecap="round"/>
+    <path d="M 180 332 L 180 312 M 180 332 L 200 332" stroke="#00ff88" stroke-width="4" stroke-linecap="round"/>
+    <path d="M 332 332 L 332 312 M 332 332 L 312 332" stroke="#00ff88" stroke-width="4" stroke-linecap="round"/>
+  </g>
+  
+  <!-- Mouse Icon -->
+  <g id="mouse" transform="translate(350, 350)">
+    <rect x="0" y="0" width="50" height="75" rx="25" fill="#1a1a2e" stroke="#00ff88" stroke-width="3"/>
+    <line x1="25" y1="15" x2="25" y2="30" stroke="#00ff88" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="25" cy="55" r="3" fill="#00ff88"/>
+  </g>
+  
+  <!-- Accuracy Indicator -->
+  <g id="accuracy" opacity="0.8">
+    <circle cx="256" cy="256" r="100" fill="none" stroke="#6366f1" stroke-width="3" stroke-dasharray="8 4" opacity="0.3"/>
+    <circle cx="256" cy="256" r="130" fill="none" stroke="#6366f1" stroke-width="2" stroke-dasharray="12 6" opacity="0.2"/>
+  </g>
+  
+  <!-- Dot Pattern Background -->
+  <defs>
+    <pattern id="dots" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1" fill="#ffffff" opacity="0.05"/>
+    </pattern>
+    
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f0f1e;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1a1a2e;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="ringGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00ff88;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#6366f1;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#00ff88;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <rect width="512" height="512" fill="url(#dots)" opacity="0.3"/>
+  
+  <!-- Glow Effects -->
+  <defs>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <g filter="url(#glow)">
+    <circle cx="256" cy="256" r="10" fill="#00ff88"/>
+  </g>
+</svg>
