@@ -212,6 +212,49 @@
             <div class="main-layout">
                 <!-- Left Column: Calculator -->
                 <div class="calculator-column">
+                    <!-- Precision Test Panel -->
+                    <div id="precisionTestPanel" class="card" style="display: none;">
+                        <div class="test-badge">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <circle cx="12" cy="12" r="6"></circle>
+                                <circle cx="12" cy="12" r="2"></circle>
+                            </svg>
+                            HEADSHOT PRECISION MODE
+                        </div>
+
+                        <div id="testInstructions" class="test-instructions">
+                            <!-- Instructions will be dynamically inserted here -->
+                        </div>
+
+                        <div class="test-canvas-container">
+                            <canvas id="precisionTestCanvas" class="precision-test-canvas"></canvas>
+                        </div>
+
+                        <div id="testResultsDisplay" class="test-results-display" style="display: none;">
+                            <!-- Results will be displayed here -->
+                        </div>
+
+                        <div class="test-actions">
+                            <button id="startTrackingTest" class="btn-primary">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <circle cx="12" cy="12" r="4"></circle>
+                                </svg>
+                                Comenzar Tracking Test
+                            </button>
+                            <button id="startFlickTest" class="btn-primary" disabled>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                                </svg>
+                                Comenzar Flick Test
+                            </button>
+                            <button id="skipPrecisionTests" class="btn-text">
+                                Omitir Tests → Modo Clásico PSA
+                            </button>
+                        </div>
+                    </div>
+
                     <!-- Initial Setup -->
                     <div id="setupPanel" class="card">
                         <h2 class="card-title">Configuración Inicial</h2>
@@ -275,6 +318,18 @@
                                     <strong>Modo Adaptativo</strong> - El algoritmo se ajusta según tus elecciones
                                 </span>
                             </label>
+                        </div>
+
+                        <div class="checkbox-group">
+                            <label class="checkbox-label checkbox-headshot">
+                                <input type="checkbox" id="headshotMode">
+                                <span class="checkbox-text">
+                                    <strong>🎯 Modo Headshot Precision (NUEVO)</strong> - Tests objetivos para optimizar tu aim para headshots
+                                </span>
+                            </label>
+                            <span class="input-hint" style="margin-left: 28px; margin-top: 4px; display: block;">
+                                Incluye tracking y flick tests para medir tu precisión real
+                            </span>
                         </div>
 
                         <button id="startBtn" class="btn-primary">
@@ -559,6 +614,14 @@
                         <h3 class="card-title">✨ Características Ultra</h3>
                         <ul class="features-list">
                             <li>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
+                                <strong>NUEVO:</strong> Modo Headshot Precision con tests objetivos
+                            </li>
+                            <li>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                                Tracking & Flick Tests para medir precisión real
+                            </li>
+                            <li>
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
                                 Algoritmo adaptativo inteligente
                             </li>
@@ -580,7 +643,7 @@
                             </li>
                             <li>
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                                Temporizador de prueba
+                                Detección de over/undershooting
                             </li>
                         </ul>
                     </div>
@@ -589,9 +652,13 @@
                     <div class="card info-card">
                         <h3 class="card-title">¿Qué es PSA Ultra?</h3>
                         <p class="info-text">
-                            Versión mejorada del método PSA con algoritmo adaptativo que se ajusta según tus elecciones. 
-                            Incluye comparación con sensibilidades de pros, análisis de consistencia, y recomendaciones 
-                            personalizadas según tu estilo de juego.
+                            Versión mejorada del método PSA con <strong>2 modos</strong>:
+                        </p>
+                        <p class="info-text">
+                            <strong>🎯 Headshot Precision Mode:</strong> Tests objetivos que miden tu tracking y flicks para optimizar tu sensibilidad específicamente para headshots. Detecta over/undershooting y ajusta automáticamente.
+                        </p>
+                        <p class="info-text">
+                            <strong>⚙️ Classic PSA Mode:</strong> Algoritmo adaptativo que se ajusta según tus elecciones, con comparación de pros, análisis de consistencia y recomendaciones personalizadas.
                         </p>
                     </div>
                 </div>
@@ -611,6 +678,7 @@
     <!-- Supabase Client Library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="social-share.js"></script>
+    <script src="precision-tests.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
