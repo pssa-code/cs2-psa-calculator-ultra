@@ -52,9 +52,18 @@ class PSACalculatorUltra {
         // Pro database
         this.proDatabase = this.initProDatabase();
         
+        // Headshot mode
+        this.headshotMode = false;
+        this.headshotModeCheckbox = null;
+        
         this.initializeElements();
         this.attachEventListeners();
         this.loadSavedData();
+        
+        // Initialize Headshot Precision Tests
+        if (typeof HeadshotPrecisionTests !== 'undefined') {
+            this.precisionTests = new HeadshotPrecisionTests(this);
+        }
     }
     
     initProDatabase() {
@@ -92,6 +101,7 @@ class PSACalculatorUltra {
         this.playStyleSelect = document.getElementById('playStyleSelect');
         this.aimStyleSelect = document.getElementById('aimStyleSelect');
         this.adaptiveCheckbox = document.getElementById('adaptiveMode');
+        this.headshotModeCheckbox = document.getElementById('headshotMode');
         
         // Buttons
         this.startBtn = document.getElementById('startBtn');
@@ -298,6 +308,7 @@ class PSACalculatorUltra {
         this.playStyle = this.playStyleSelect?.value || 'rifler';
         this.armAim = this.aimStyleSelect?.value || 'mixed';
         this.adaptiveMode = this.adaptiveCheckbox?.checked !== false;
+        this.headshotMode = this.headshotModeCheckbox?.checked || false;
         
         this.currentIteration = 0;
         this.history = [];
@@ -305,12 +316,27 @@ class PSACalculatorUltra {
         this.timestamps = [];
         this.testTimes = [];
         
-        this.setupPanel.style.display = 'none';
-        this.iterationPanel.style.display = 'block';
-        this.resultPanel.style.display = 'none';
-        
         this.saveSettings();
-        this.nextIteration();
+        
+        // Check if Headshot Precision Mode is enabled
+        if (this.headshotMode && this.precisionTests) {
+            // Show precision tests panel
+            this.setupPanel.style.display = 'none';
+            this.iterationPanel.style.display = 'none';
+            this.resultPanel.style.display = 'none';
+            
+            this.precisionTests.reset();
+            this.precisionTests.showTestPanel();
+            
+            this.showToast('🎯 Iniciando tests de precisión para headshots...', 'success');
+        } else {
+            // Classic PSA mode
+            this.setupPanel.style.display = 'none';
+            this.iterationPanel.style.display = 'block';
+            this.resultPanel.style.display = 'none';
+            
+            this.nextIteration();
+        }
     }
     
     nextIteration() {
@@ -860,6 +886,12 @@ class PSACalculatorUltra {
         if (this.ctx) {
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
             this.updateGraph();
+        }
+        
+        // Reset precision tests if they exist
+        if (this.precisionTests) {
+            this.precisionTests.reset();
+            this.precisionTests.hideTestPanel();
         }
         
         this.setupPanel.style.display = 'block';
