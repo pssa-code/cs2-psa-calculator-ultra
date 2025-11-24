@@ -2728,3 +2728,233 @@ select.input-field {
         height: 10px;
     }
 }
+
+
+/* ===========================
+   HEADSHOT PRECISION TESTS
+   =========================== */
+
+.test-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    color: #FFFFFF;
+    margin-bottom: 20px;
+}
+
+.test-badge svg {
+    width: 20px;
+    height: 20px;
+}
+
+.test-instructions {
+    margin-bottom: 24px;
+    padding: 20px;
+    background: #27272A;
+    border-radius: 12px;
+    border-left: 4px solid #EF4444;
+}
+
+.test-instructions h3 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #FAFAFA;
+    margin: 0 0 12px 0;
+}
+
+.test-instructions p {
+    font-size: 15px;
+    color: #A1A1AA;
+    margin: 8px 0;
+    line-height: 1.6;
+}
+
+.test-instructions ul {
+    margin: 12px 0;
+    padding-left: 20px;
+}
+
+.test-instructions li {
+    color: #A1A1AA;
+    margin: 6px 0;
+    line-height: 1.6;
+}
+
+.test-instructions strong {
+    color: #08D3BB;
+    font-weight: 600;
+}
+
+.test-canvas-container {
+    position: relative;
+    width: 100%;
+    margin-bottom: 24px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #18181B;
+    border: 2px solid #27272A;
+}
+
+.precision-test-canvas {
+    display: block;
+    width: 100%;
+    height: 400px;
+    cursor: crosshair;
+}
+
+.test-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.test-actions .btn-primary {
+    width: 100%;
+}
+
+.test-actions .btn-text {
+    background: none;
+    border: none;
+    color: #A1A1AA;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 12px;
+    transition: color 0.2s;
+    font-family: 'Inter', sans-serif;
+}
+
+.test-actions .btn-text:hover {
+    color: #FAFAFA;
+}
+
+.test-results-display {
+    margin-top: 24px;
+    padding: 24px;
+    background: linear-gradient(135deg, #27272A 0%, #18181B 100%);
+    border-radius: 12px;
+    border: 2px solid #08D3BB;
+}
+
+.test-results-summary h3 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #FAFAFA;
+    margin: 0 0 20px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.test-result-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.test-result-item {
+    padding: 16px;
+    background: #18181B;
+    border-radius: 8px;
+    border: 1px solid #3F3F46;
+    text-align: center;
+}
+
+.test-result-label {
+    display: block;
+    font-size: 13px;
+    color: #A1A1AA;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.test-result-value {
+    display: block;
+    font-size: 28px;
+    font-weight: 700;
+    color: #08D3BB;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.test-recommendation {
+    padding: 20px;
+    background: #18181B;
+    border-radius: 8px;
+    border-left: 4px solid #22C55E;
+}
+
+.test-recommendation h4 {
+    font-size: 16px;
+    font-weight: 700;
+    color: #FAFAFA;
+    margin: 0 0 12px 0;
+}
+
+.test-recommendation p {
+    font-size: 15px;
+    color: #D4D4D8;
+    margin: 8px 0;
+    line-height: 1.6;
+}
+
+.recommendation-adjustment {
+    margin-top: 12px;
+    padding: 12px;
+    background: #27272A;
+    border-radius: 6px;
+    border-left: 3px solid #FBBF24;
+}
+
+.recommendation-adjustment strong {
+    color: #FBBF24;
+    font-weight: 600;
+}
+
+.checkbox-headshot {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.05) 100%);
+    border: 2px solid rgba(239, 68, 68, 0.3);
+    padding: 16px;
+    border-radius: 12px;
+    margin-top: 8px;
+}
+
+.checkbox-headshot:hover {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(220, 38, 38, 0.08) 100%);
+    border-color: rgba(239, 68, 68, 0.5);
+}
+
+.checkbox-headshot .checkbox-text strong {
+    background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Disabled button state for tests */
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+button:disabled:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+/* Responsive design for test panel */
+@media (max-width: 768px) {
+    .precision-test-canvas {
+        height: 300px;
+    }
+    
+    .test-result-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
