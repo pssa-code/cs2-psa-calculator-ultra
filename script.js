@@ -2,8 +2,8 @@
 // PSA Calculator - ULTRA ENHANCED VERSION v2.0
 // ===========================
 // ALGORITHM: ULTRA-IMPROVED ADAPTIVE CONVERGENCE
-// - Guaranteed convergence in 10 iterations
-// - 3-Phase progressive refinement (Exploration → Binary Refinement → Fine-tuning)
+// - Guaranteed convergence in 5 iterations (FAST)
+// - 2-Phase progressive refinement (Exploration → Fine-tuning)
 // - Advanced pattern analysis with trend detection
 // - Dynamic search boundaries optimization
 // - Real-time convergence confidence scoring
@@ -34,7 +34,7 @@ class PSACalculatorUltra {
         this.dpi = 800;
         this.baseSensitivity = 1.0;
         this.currentIteration = 0;
-        this.maxIterations = 10; // *** IMPROVED: 10 iterations for optimal precision ***
+        this.maxIterations = 6; // *** IMPROVED: 6 iterations for optimal precision ***
         this.history = [];
         this.game = 'cs2';
         
@@ -274,22 +274,30 @@ class PSACalculatorUltra {
     calculateOptimalConvergenceFactor(iteration) {
         const pattern = this.analyzeUserPattern();
         
-        // *** PHASE-BASED CONVERGENCE STRATEGY ***
-        // Phase 1 (iterations 1-3): Wide exploration (40% range)
-        // Phase 2 (iterations 4-7): Binary refinement (20% -> 8%)
-        // Phase 3 (iterations 8-10): Fine-tuning (4% -> 1%)
+        // *** PHASE-BASED CONVERGENCE STRATEGY (6 ITERATIONS) ***
+        // Phase 1 (iterations 1-4): Wide exploration and refinement (30% → 20% → 10% → 8%)
+        // Phase 2 (iterations 5-6): Fine-tuning (4% → 0.8%)
         
         let baseFactor;
         
-        if (iteration <= 2) {
-            // Phase 1: Wide exploration
-            baseFactor = 0.40 - (iteration * 0.07); // 40% -> 33% -> 26%
-        } else if (iteration <= 6) {
-            // Phase 2: Binary refinement
-            baseFactor = 0.20 * Math.pow(0.65, iteration - 3); // Exponential decay
+        if (iteration === 0) {
+            // Iteration 1: Wide exploration
+            baseFactor = 0.30; // 30%
+        } else if (iteration === 1) {
+            // Iteration 2: Medium exploration
+            baseFactor = 0.20; // 20%
+        } else if (iteration === 2) {
+            // Iteration 3: Initial refinement
+            baseFactor = 0.10; // 10%
+        } else if (iteration === 3) {
+            // Iteration 4: Medium refinement
+            baseFactor = 0.08; // 8%
+        } else if (iteration === 4) {
+            // Iteration 5: Fine-tuning
+            baseFactor = 0.04; // 4%
         } else {
-            // Phase 3: Fine-tuning
-            baseFactor = 0.04 * Math.pow(0.55, iteration - 7); // Micro-adjustments
+            // Iteration 6: Final precision
+            baseFactor = 0.008; // 0.8%
         }
         
         // *** ADAPTIVE ADJUSTMENTS BASED ON USER PATTERN ***
@@ -318,8 +326,8 @@ class PSACalculatorUltra {
         }
         
         // Ensure minimum precision in final iterations
-        if (iteration >= 8) {
-            baseFactor = Math.max(baseFactor, 0.008); // At least 0.8% range
+        if (iteration >= 5) {
+            baseFactor = Math.max(baseFactor, 0.01); // At least 1% range
         }
         
         return baseFactor;
@@ -537,20 +545,18 @@ class PSACalculatorUltra {
             const pattern = this.analyzeUserPattern();
             let phaseText = '';
             
-            // Show current phase
-            if (this.currentIteration <= 3) {
+            // Show current phase (6 iterations: 2 phases)
+            if (this.currentIteration <= 4) {
                 phaseText = ' - Fase 1: Exploración';
-            } else if (this.currentIteration <= 7) {
-                phaseText = ' - Fase 2: Refinamiento';
             } else {
-                phaseText = ' - Fase 3: Ajuste fino';
+                phaseText = ' - Fase 2: Ajuste fino';
             }
             
             // Show convergence status
             if (pattern && pattern.isConverged) {
                 phaseText += ' ✓ Convergido';
             } else if (pattern && pattern.trend) {
-                phaseText += ` (↗ ${pattern.confidence}% confianza)`;
+                phaseText += ` (${pattern.confidence}% confianza)`;
             }
             
             this.iterationCounter.textContent = `Iteración ${this.currentIteration} / ${this.maxIterations}${phaseText}`;
@@ -561,11 +567,9 @@ class PSACalculatorUltra {
             const progress = (this.currentIteration / this.maxIterations) * 100;
             this.progressBar.style.width = `${progress}%`;
             
-            // Change color based on phase
-            if (this.currentIteration <= 3) {
+            // Change color based on phase (6 iterations: 2 phases)
+            if (this.currentIteration <= 4) {
                 this.progressBar.style.backgroundColor = '#FBBF24'; // Yellow - exploration
-            } else if (this.currentIteration <= 7) {
-                this.progressBar.style.backgroundColor = '#08D3BB'; // Cyan - refinement
             } else {
                 this.progressBar.style.backgroundColor = '#22C55E'; // Green - fine-tuning
             }
